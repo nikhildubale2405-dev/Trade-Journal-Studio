@@ -413,7 +413,7 @@ export default function App() {
             MarketMinds
           </h1>
           <p className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-2">
-            Institutional Setup Journaling & AI Analytics
+            Simple Trading Journal for Beginners
           </p>
         </div>
 
@@ -427,7 +427,7 @@ export default function App() {
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {authMode === "login" 
                 ? "Enter your credentials to access your trading dashboard" 
-                : "Register a synchronized profile to start tracking setups"}
+                : "Create an account to track your trades"}
             </p>
           </div>
 
@@ -440,7 +440,7 @@ export default function App() {
           <form onSubmit={handleAuthSubmit} className="space-y-4">
             {authMode === "register" && (
               <div>
-                <label className="block text-[10px] font-mono text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">Display Trader Name</label>
+                <label className="block text-[10px] font-mono text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">Your Name</label>
                 <input
                   type="text"
                   required
@@ -453,7 +453,7 @@ export default function App() {
             )}
 
             <div>
-              <label className="block text-[10px] font-mono text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">Trader Email Address</label>
+              <label className="block text-[10px] font-mono text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">Your Email Address</label>
               <input
                 type="email"
                 required
@@ -465,7 +465,7 @@ export default function App() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-mono text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">Secure Password</label>
+              <label className="block text-[10px] font-mono text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">Your Password</label>
               <input
                 type="password"
                 required
@@ -505,10 +505,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Footer info */}
-        <p className="text-[10px] text-slate-400 dark:text-slate-550 mt-8 max-w-sm text-center leading-relaxed font-sans">
-          💡 Registering with your system Owner Email initializes admin role diagnostics automatically.
-        </p>
+        {/* Footer info removed for simplicity */}
       </div>
     );
   }
@@ -531,7 +528,7 @@ export default function App() {
                 V1.2
               </span>
             </h1>
-            <p className="text-[9px] font-mono text-slate-405 dark:text-slate-500 mt-1 leading-none">Institutional Setup journaling & timing analytics</p>
+            <p className="text-[9px] font-mono text-slate-405 dark:text-slate-500 mt-1 leading-none">Simple Trading Journal for Beginners</p>
           </div>
         </div>
 
@@ -583,7 +580,7 @@ export default function App() {
               : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
           }`}
         >
-          <BookOpen size={13} /> Trading Journal
+          <BookOpen size={13} /> My Trades
         </button>
         <button
           id="tab-btn-analytics"
@@ -594,7 +591,7 @@ export default function App() {
               : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
           }`}
         >
-          <BarChart2 size={13} /> Performance Analytics
+          <BarChart2 size={13} /> My Performance
         </button>
         <button
           id="tab-btn-backtest"
@@ -605,7 +602,7 @@ export default function App() {
               : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
           }`}
         >
-          <Play size={13} /> Replay Backtesting
+          <Play size={13} /> Practice Trading
         </button>
         <button
           id="tab-btn-mistakes"
@@ -616,7 +613,7 @@ export default function App() {
               : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
           }`}
         >
-          <Brain size={13} className="text-pink-500" /> Psychology & Mistakes
+          <Brain size={13} className="text-pink-500" /> My Mistakes & Learnings
         </button>
         <button
           id="tab-btn-compliance"
@@ -627,7 +624,7 @@ export default function App() {
               : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
           }`}
         >
-          <CheckSquare size={13} className="text-emerald-500" /> Compliance Rules & Sim
+          <CheckSquare size={13} className="text-emerald-500" /> My Trading Rules
         </button>
         <button
           id="tab-btn-coach"
@@ -638,7 +635,7 @@ export default function App() {
               : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
           }`}
         >
-          <Sparkles size={13} className="text-amber-500" /> AI Coach DNA
+          <Sparkles size={13} className="text-amber-500" /> AI Trading Coach
         </button>
         <button
           id="tab-btn-alliance"
@@ -649,7 +646,7 @@ export default function App() {
               : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
           }`}
         >
-          <Users size={13} className="text-indigo-500" /> Alliance Squad
+          <Users size={13} className="text-indigo-500" /> Trading Groups
         </button>
         <button
           id="tab-btn-community"
@@ -660,7 +657,7 @@ export default function App() {
               : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
           }`}
         >
-          <MessageSquare size={13} /> Community Hub
+          <MessageSquare size={13} /> Discussion Forum
         </button>
         
         {userRole === "admin" && (
@@ -673,7 +670,7 @@ export default function App() {
                 : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
             }`}
           >
-            <ShieldAlert size={13} className="text-indigo-600 animate-pulse" /> Admin Console
+            <ShieldAlert size={13} className="text-indigo-600 animate-pulse" /> Admin Page
           </button>
         )}
 
@@ -726,7 +723,7 @@ export default function App() {
             {/* General Export Logs Row */}
             <div id="journal-export-row" className="bg-white dark:bg-slate-900 p-3.5 rounded-lg border border-slate-205 dark:border-slate-800 flex flex-col sm:flex-row gap-3 justify-between items-center text-slate-600 dark:text-slate-300 text-xs text-center sm:text-left">
               <div>
-                <strong className="text-slate-800 dark:text-slate-150">Data Management Utilities:</strong> Exporting formatted journal CSV files is immediately supported.
+                <strong className="text-slate-800 dark:text-slate-150">Export your trading data to an Excel file.</strong>
               </div>
               <div className="flex gap-2.5">
                 <button
@@ -848,8 +845,8 @@ export default function App() {
 
       {/* 5. GENTLE SIMPLE FOOTER */}
       <footer id="app-workspace-footer" className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-4 px-4 text-center text-[10px] text-slate-500 dark:text-slate-400 space-y-1">
-        <p>© 2026 MarketMinds Inc. Read-Only Secure Interface.</p>
-        <p>This panel is designed to provide cognitive behavioral patterns and timing analysis. Use elite risk management practices in standard market systems.</p>
+        <p>© 2026 MarketMinds Inc.</p>
+        <p>Made for beginners to track trades and learn from mistakes. Always trade safely.</p>
       </footer>
 
     </div>

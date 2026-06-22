@@ -35,11 +35,11 @@ export default function DashboardSummary({ trades, transactions }: DashboardSumm
       {/* Total Equity */}
       <div id="card-equity" className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-md p-3.5 shadow-xs text-slate-850 dark:text-slate-105 flex items-center justify-between hover:shadow-sm transition-shadow">
         <div>
-          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Equity</p>
+          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Balance</p>
           <p className="text-xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400 mt-0.5 animate-none">
             ${currentEquity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Current account value</p>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Total money in your account</p>
         </div>
         <div id="icon-equity" className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-650 dark:text-emerald-400 p-2.5 rounded-md">
           <Wallet size={18} />
@@ -49,11 +49,11 @@ export default function DashboardSummary({ trades, transactions }: DashboardSumm
       {/* Total Investment */}
       <div id="card-investment" className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-md p-3.5 shadow-xs text-slate-850 dark:text-slate-105 flex items-center justify-between hover:shadow-sm transition-shadow">
         <div>
-          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Investment</p>
+          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Deposit</p>
           <p className="text-xl font-bold tracking-tight text-indigo-650 dark:text-indigo-400 mt-0.5 animate-none">
             ${totalInvestment.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Total deposited amount</p>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Money you added</p>
         </div>
         <div id="icon-investment" className="bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 p-2.5 rounded-md">
           <ArrowDownLeft size={18} />
@@ -67,7 +67,7 @@ export default function DashboardSummary({ trades, transactions }: DashboardSumm
           <p className="text-xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 mt-0.5 animate-none">
             +${totalProfit.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Sum of won closed trades</p>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Money from winning trades</p>
         </div>
         <div id="icon-profit" className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-650 dark:text-emerald-400 p-2.5 rounded-md">
           <TrendingUp size={18} />
@@ -81,7 +81,7 @@ export default function DashboardSummary({ trades, transactions }: DashboardSumm
           <p className="text-xl font-bold tracking-tight text-rose-600 dark:text-rose-455 mt-0.5 animate-none">
             -${totalLoss.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Sum of lost closed trades</p>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Money from losing trades</p>
         </div>
         <div id="icon-loss" className="bg-rose-50 dark:bg-rose-950/30 text-rose-650 dark:text-rose-400 p-2.5 rounded-md">
           <TrendingDown size={18} />
@@ -91,11 +91,11 @@ export default function DashboardSummary({ trades, transactions }: DashboardSumm
       {/* Net Profit/Loss */}
       <div id="card-net-pnl" className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-md p-3.5 shadow-xs text-slate-850 dark:text-slate-105 flex items-center justify-between hover:shadow-sm transition-shadow">
         <div>
-          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Net P/L</p>
+          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Overall Profit/Loss</p>
           <p className={`text-xl font-bold tracking-tight mt-0.5 animate-none ${netPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-455'}`}>
             {netPnL >= 0 ? '+' : '-'}${Math.abs(netPnL).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Overall net performance</p>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Your final profit or loss</p>
         </div>
         <div id="icon-net-pnl" className={`p-2.5 rounded-md ${netPnL >= 0 ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-650 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/30 text-rose-650 dark:text-rose-400'}`}>
           <Activity size={18} />
@@ -105,11 +105,11 @@ export default function DashboardSummary({ trades, transactions }: DashboardSumm
       {/* Total Withdrawals */}
       <div id="card-withdrawals" className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-md p-3.5 shadow-xs text-slate-850 dark:text-slate-105 flex items-center justify-between hover:shadow-sm transition-shadow">
         <div>
-          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Withdrawals</p>
+          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Withdrawal</p>
           <p className="text-xl font-bold tracking-tight text-amber-600 dark:text-amber-450 mt-0.5 animate-none">
             -${totalWithdrawals.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Asset capital cashouts</p>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Money you took out</p>
         </div>
         <div id="icon-withdrawals" className="bg-amber-50 dark:bg-amber-950/30 text-amber-650 dark:text-amber-400 p-2.5 rounded-md">
           <ArrowUpRight size={18} />
