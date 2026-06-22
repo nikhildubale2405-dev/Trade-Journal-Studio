@@ -677,17 +677,7 @@ export default function App() {
           </button>
         )}
 
-        <button
-          id="tab-btn-security"
-          onClick={() => setActiveTab("security")}
-          className={`px-3 py-1.5 text-xs font-mono rounded transition-all flex items-center gap-1.5 ${
-            activeTab === "security"
-              ? "bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800 border-b-2 border-b-indigo-655 dark:border-b-indigo-500 text-indigo-660 dark:text-indigo-400 font-bold shadow-xs animate-none"
-              : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
-          }`}
-        >
-          <HelpCircle size={13} /> Encryption & Rules Policy
-        </button>
+
       </nav>
 
       {/* 4. MAIN CENTRAL SCREEN VIEWS SWITCHER */}
@@ -852,12 +842,7 @@ export default function App() {
           </div>
         )}
 
-        {/* SECURITY & RULES POLICY DOCK */}
-        {activeTab === "security" && (
-          <div id="tab-security-workspace">
-            <DocumentationView />
-          </div>
-        )}
+
 
       </main>
 

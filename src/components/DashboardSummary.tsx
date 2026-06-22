@@ -1,5 +1,5 @@
 import { Trade, Transaction } from "../types";
-import { TrendingUp, TrendingDown, DollarSign, Wallet, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Wallet, ArrowDownLeft, ArrowUpRight, Activity } from "lucide-react";
 
 interface DashboardSummaryProps {
   trades: Trade[];
@@ -28,9 +28,10 @@ export default function DashboardSummary({ trades, transactions }: DashboardSumm
 
   // Formula: Current Equity = Total Investment + Total Trading Profit − Total Trading Loss − Total Withdrawals
   const currentEquity = totalInvestment + totalProfit - totalLoss - totalWithdrawals;
+  const netPnL = totalProfit - totalLoss;
 
   return (
-    <div id="dashboard-summary" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-4">
+    <div id="dashboard-summary" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5 mb-4">
       {/* Total Equity */}
       <div id="card-equity" className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-md p-3.5 shadow-xs text-slate-850 dark:text-slate-105 flex items-center justify-between hover:shadow-sm transition-shadow">
         <div>
@@ -84,6 +85,20 @@ export default function DashboardSummary({ trades, transactions }: DashboardSumm
         </div>
         <div id="icon-loss" className="bg-rose-50 dark:bg-rose-950/30 text-rose-650 dark:text-rose-400 p-2.5 rounded-md">
           <TrendingDown size={18} />
+        </div>
+      </div>
+
+      {/* Net Profit/Loss */}
+      <div id="card-net-pnl" className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-md p-3.5 shadow-xs text-slate-850 dark:text-slate-105 flex items-center justify-between hover:shadow-sm transition-shadow">
+        <div>
+          <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Net P/L</p>
+          <p className={`text-xl font-bold tracking-tight mt-0.5 animate-none ${netPnL >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-455'}`}>
+            {netPnL >= 0 ? '+' : '-'}${Math.abs(netPnL).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Overall net performance</p>
+        </div>
+        <div id="icon-net-pnl" className={`p-2.5 rounded-md ${netPnL >= 0 ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-650 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/30 text-rose-650 dark:text-rose-400'}`}>
+          <Activity size={18} />
         </div>
       </div>
 
