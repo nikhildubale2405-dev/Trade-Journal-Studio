@@ -5,7 +5,7 @@ import DashboardSummary from "./components/DashboardSummary";
 import TradeHistoryList from "./components/TradeHistoryList";
 import TradeEntryForm from "./components/TradeEntryForm";
 import AnalyticsDashboardView from "./components/AnalyticsDashboardView";
-import BacktestingReplayView from "./components/BacktestingReplayView";
+import EquityCurveSimulator from "./components/EquityCurveSimulator";
 import CommunityHub from "./components/CommunityHub";
 import AdminView from "./components/AdminView";
 import DocumentationView from "./components/DocumentationView";
@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"journal" | "analytics" | "backtest" | "community" | "admin" | "security" | "mistakes" | "compliance" | "coach" | "alliance">("journal");
+  const [activeTab, setActiveTab] = useState<"journal" | "analytics" | "simulator" | "community" | "admin" | "security" | "mistakes" | "compliance" | "coach" | "alliance">("journal");
 
   // --- Auth States ---
   const [userEmail, setUserEmail] = useState<string | null>(() => localStorage.getItem("mm_user_email"));
@@ -594,15 +594,15 @@ export default function App() {
           <BarChart2 size={13} /> My Performance
         </button>
         <button
-          id="tab-btn-backtest"
-          onClick={() => setActiveTab("backtest")}
+          id="tab-btn-simulator"
+          onClick={() => setActiveTab("simulator")}
           className={`px-3 py-1.5 text-xs font-mono rounded transition-all flex items-center gap-1.5 ${
-            activeTab === "backtest"
+            activeTab === "simulator"
               ? "bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800 border-b-2 border-b-indigo-655 dark:border-b-indigo-500 text-indigo-660 dark:text-indigo-400 font-bold shadow-xs animate-none"
               : "text-slate-600 dark:text-slate-355 hover:bg-white/50 dark:hover:bg-slate-800/50"
           }`}
         >
-          <Play size={13} /> Practice Trading
+          <TrendingUp size={13} /> Equity Curve & Setups
         </button>
         <button
           id="tab-btn-mistakes"
@@ -818,10 +818,12 @@ export default function App() {
           </div>
         )}
 
-        {/* STRATEGY CANDLE REPLAY VIEW */}
-        {activeTab === "backtest" && (
-          <div id="tab-backtest-workspace">
-            <BacktestingReplayView />
+        {/* EQUITY CURVE SIMULATOR VIEW */}
+        {activeTab === "simulator" && (
+          <div id="tab-simulator-workspace">
+            <EquityCurveSimulator 
+              trades={trades}
+            />
           </div>
         )}
 
