@@ -34,7 +34,8 @@ import {
   Moon,
   Brain,
   CheckSquare,
-  Users
+  Users,
+  TrendingUp
 } from "lucide-react";
 
 export default function App() {
