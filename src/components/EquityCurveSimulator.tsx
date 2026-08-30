@@ -170,13 +170,26 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
   const rangeX = Math.max(chartData.length - 1, 1);
   const scaleX = (width - 2 * paddingX) / rangeX;
 
-  const getPoints = () => {
+  const getSmoothPath = () => {
     if (chartData.length === 0) return "";
-    return chartData.map((d, i) => {
+    
+    const firstX = paddingX;
+    const firstY = height - paddingY - ((chartData[0].equity - yMin) * scaleY);
+    let path = `M ${firstX},${firstY}`;
+
+    for (let i = 1; i < chartData.length; i++) {
+      const prevX = paddingX + ((i - 1) * scaleX);
+      const prevY = height - paddingY - ((chartData[i-1].equity - yMin) * scaleY);
+      
       const x = paddingX + (i * scaleX);
-      const y = height - paddingY - ((d.equity - yMin) * scaleY);
-      return `${x},${y}`;
-    }).join(" ");
+      const y = height - paddingY - ((chartData[i].equity - yMin) * scaleY);
+
+      // Create a smooth cubic bezier curve
+      const cpX = (prevX + x) / 2;
+      path += ` C ${cpX},${prevY} ${cpX},${y} ${x},${y}`;
+    }
+    
+    return path;
   };
 
   const zeroY = height - paddingY - ((0 - yMin) * scaleY);
@@ -253,9 +266,9 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
                   <line x1={paddingX} y1={zeroY} x2={width - paddingX} y2={zeroY} stroke="#cbd5e1" strokeWidth="1.5" opacity="0.3" />
                 )}
 
-                {/* The Line connecting the dots */}
-                <polyline
-                  points={getPoints()}
+                {/* The Smooth Line connecting the dots */}
+                <path
+                  d={getSmoothPath()}
                   fill="none"
                   stroke="#9b9ca1ff"
                   strokeWidth="3"
