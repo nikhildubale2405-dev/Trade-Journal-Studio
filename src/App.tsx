@@ -824,6 +824,7 @@ export default function App() {
           <div id="tab-simulator-workspace">
             <EquityCurveSimulator 
               trades={trades}
+              transactions={transactions}
             />
           </div>
         )}

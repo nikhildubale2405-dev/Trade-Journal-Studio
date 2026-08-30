@@ -1,13 +1,23 @@
 import React, { useState, useMemo } from 'react';
-import { Trade } from '../types';
+import { Trade, Transaction } from '../types';
 import { TrendingUp, BarChart2, Activity, Award, Calendar, Hash } from 'lucide-react';
 
 interface EquityCurveSimulatorProps {
   trades: Trade[];
+  transactions: Transaction[];
 }
 
-export default function EquityCurveSimulator({ trades }: EquityCurveSimulatorProps) {
+export default function EquityCurveSimulator({ trades, transactions }: EquityCurveSimulatorProps) {
   const [viewMode, setViewMode] = useState<"trade" | "day">("trade");
+  const [hoveredPoint, setHoveredPoint] = useState<{x: number, y: number, label: string, equity: number, pnl: number} | null>(null);
+
+  // Calculate Initial Funding Balance
+  const initialBalance = useMemo(() => {
+    if (!transactions) return 0;
+    return transactions.reduce((acc, tx) => {
+      return tx.type === 'DEPOSIT' ? acc + Number(tx.amount) : acc - Number(tx.amount);
+    }, 0);
+  }, [transactions]);
 
   // Sort trades chronologically
   const sortedTrades = useMemo(() => {
@@ -22,18 +32,27 @@ export default function EquityCurveSimulator({ trades }: EquityCurveSimulatorPro
 
   // Data processing for Chart
   const chartData = useMemo(() => {
-    let currentEquity = 0;
+    let currentEquity = initialBalance;
     
+    // Always start the curve at point 0 (Initial Balance)
+    const initialPoint = {
+      label: "Initial Balance",
+      equity: initialBalance,
+      pnl: 0,
+      date: sortedTrades[0]?.entryDate || new Date().toISOString().split('T')[0]
+    };
+
     if (viewMode === "trade") {
-      return sortedTrades.map((t, index) => {
+      const points = sortedTrades.map((t, index) => {
         currentEquity += Number(t.profitLoss);
         return {
-          label: `Trade ${index + 1}`,
+          label: `Trade ${index + 1} (${t.symbol || 'Unknown'})`,
           equity: currentEquity,
           pnl: Number(t.profitLoss),
           date: t.entryDate
         };
       });
+      return [initialPoint, ...points];
     } else {
       // Group by day
       const dailyMap: Record<string, number> = {};
@@ -43,7 +62,7 @@ export default function EquityCurveSimulator({ trades }: EquityCurveSimulatorPro
       });
       
       const sortedDays = Object.keys(dailyMap).sort();
-      return sortedDays.map(date => {
+      const points = sortedDays.map(date => {
         currentEquity += dailyMap[date];
         return {
           label: date,
@@ -52,14 +71,15 @@ export default function EquityCurveSimulator({ trades }: EquityCurveSimulatorPro
           date: date
         };
       });
+      return [initialPoint, ...points];
     }
-  }, [sortedTrades, viewMode]);
+  }, [sortedTrades, viewMode, initialBalance]);
 
   // Best Setup Calculation
   const bestSetup = useMemo(() => {
     if (sortedTrades.length === 0) return null;
 
-    const setups: Record<string, { pnl: number, wins: number, total: number }> = {};
+    const setups: Record<string, { pnl: number, wins: number, total: number, notes: string[] }> = {};
 
     sortedTrades.forEach(t => {
       // Create a composite key if fields exist, otherwise 'Unknown'
@@ -70,20 +90,23 @@ export default function EquityCurveSimulator({ trades }: EquityCurveSimulatorPro
       const key = `${type} | ${sym} | ${sess}`;
       
       if (!setups[key]) {
-        setups[key] = { pnl: 0, wins: 0, total: 0 };
+        setups[key] = { pnl: 0, wins: 0, total: 0, notes: [] };
       }
       
       const pnl = Number(t.profitLoss);
       setups[key].pnl += pnl;
       setups[key].total += 1;
       if (pnl > 0) setups[key].wins += 1;
+      
+      if (t.notes && t.notes.trim()) {
+        setups[key].notes.push(t.notes);
+      }
     });
 
     let best = null;
     let maxPnL = -Infinity;
 
     for (const [key, stats] of Object.entries(setups)) {
-      // Minimum 2 trades to be considered a "setup" for statistical relevance if possible, else 1
       if (stats.pnl > maxPnL) {
         maxPnL = stats.pnl;
         best = {
@@ -99,28 +122,34 @@ export default function EquityCurveSimulator({ trades }: EquityCurveSimulatorPro
 
   // SVG Chart Configuration
   const width = 800;
-  const height = 300;
-  const padding = 40;
+  const height = 350;
+  const paddingX = 60;
+  const paddingY = 40;
 
-  const minEquity = chartData.length > 0 ? Math.min(0, ...chartData.map(d => d.equity)) : 0;
-  const maxEquity = chartData.length > 0 ? Math.max(0, ...chartData.map(d => d.equity)) : 100;
+  const minEquity = chartData.length > 0 ? Math.min(...chartData.map(d => d.equity)) : 0;
+  const maxEquity = chartData.length > 0 ? Math.max(...chartData.map(d => d.equity)) : 100;
   
-  const rangeY = (maxEquity - minEquity) || 100;
-  const scaleY = (height - 2 * padding) / rangeY;
+  // Add a 10% buffer to min and max so points don't clip at the edges
+  const equityBuffer = (maxEquity - minEquity) * 0.1 || 10;
+  const yMin = minEquity - equityBuffer;
+  const yMax = maxEquity + equityBuffer;
+  
+  const rangeY = (yMax - yMin) || 100;
+  const scaleY = (height - 2 * paddingY) / rangeY;
   
   const rangeX = Math.max(chartData.length - 1, 1);
-  const scaleX = (width - 2 * padding) / rangeX;
+  const scaleX = (width - 2 * paddingX) / rangeX;
 
   const getPoints = () => {
     if (chartData.length === 0) return "";
     return chartData.map((d, i) => {
-      const x = padding + (i * scaleX);
-      const y = height - padding - ((d.equity - minEquity) * scaleY);
+      const x = paddingX + (i * scaleX);
+      const y = height - paddingY - ((d.equity - yMin) * scaleY);
       return `${x},${y}`;
     }).join(" ");
   };
 
-  const zeroY = height - padding - ((0 - minEquity) * scaleY);
+  const zeroY = height - paddingY - ((0 - yMin) * scaleY);
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 text-white space-y-6">
@@ -151,32 +180,51 @@ export default function EquityCurveSimulator({ trades }: EquityCurveSimulatorPro
         </div>
       </div>
 
-      {chartData.length > 0 ? (
+      {chartData.length > 1 ? (
         <div className="space-y-6">
           {/* Equity Chart Panel */}
           <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 relative overflow-x-auto">
-            <div className="min-w-[600px]">
+            <div className="min-w-[600px] relative" onMouseLeave={() => setHoveredPoint(null)}>
+              
               <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
-                {/* Grid Lines */}
+                {/* Horizontal Grid Lines and Y-Axis Labels */}
                 {[0, 0.25, 0.5, 0.75, 1].map(tick => {
-                  const y = padding + (height - 2 * padding) * tick;
-                  const value = maxEquity - (rangeY * tick);
+                  const y = paddingY + (height - 2 * paddingY) * tick;
+                  const value = yMax - (rangeY * tick);
                   return (
-                    <g key={tick}>
-                      <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#334155" strokeDasharray="4 4" strokeWidth="1" />
-                      <text x={padding - 10} y={y + 4} fill="#94a3b8" fontSize="10" textAnchor="end" fontFamily="monospace">
+                    <g key={`y-${tick}`}>
+                      <line x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="#334155" strokeDasharray="4 4" strokeWidth="1" />
+                      <text x={paddingX - 10} y={y + 4} fill="#94a3b8" fontSize="10" textAnchor="end" fontFamily="monospace">
                         ${value.toFixed(0)}
                       </text>
                     </g>
                   );
                 })}
                 
+                {/* X-Axis Date/Trade Labels */}
+                {chartData.map((d, i) => {
+                  // Only draw a label every N points to avoid overcrowding
+                  const labelSkip = Math.ceil(chartData.length / 10);
+                  if (i % labelSkip !== 0 && i !== chartData.length - 1 && i !== 0) return null;
+                  
+                  const x = paddingX + (i * scaleX);
+                  const y = height - paddingY + 20;
+                  return (
+                    <g key={`x-${i}`}>
+                      <line x1={x} y1={height - paddingY} x2={x} y2={height - paddingY + 5} stroke="#64748b" strokeWidth="1" />
+                      <text x={x} y={y} fill="#94a3b8" fontSize="10" textAnchor="middle" fontFamily="monospace">
+                        {viewMode === "day" ? d.date.split('-').slice(1).join('/') : i === 0 ? "Start" : d.label.split(' ')[1]}
+                      </text>
+                    </g>
+                  );
+                })}
+
                 {/* Zero Line if applicable */}
-                {minEquity < 0 && maxEquity > 0 && (
-                  <line x1={padding} y1={zeroY} x2={width - padding} y2={zeroY} stroke="#cbd5e1" strokeWidth="1.5" opacity="0.3" />
+                {yMin < 0 && yMax > 0 && (
+                  <line x1={paddingX} y1={zeroY} x2={width - paddingX} y2={zeroY} stroke="#cbd5e1" strokeWidth="1.5" opacity="0.3" />
                 )}
 
-                {/* The Line */}
+                {/* The Line connecting the dots */}
                 <polyline
                   points={getPoints()}
                   fill="none"
@@ -186,30 +234,54 @@ export default function EquityCurveSimulator({ trades }: EquityCurveSimulatorPro
                   strokeLinecap="round"
                 />
 
-                {/* Data Points */}
+                {/* Interactive Data Points */}
                 {chartData.map((d, i) => {
-                  const x = padding + (i * scaleX);
-                  const y = height - padding - ((d.equity - minEquity) * scaleY);
-                  const isProfit = d.equity >= (chartData[i-1]?.equity || 0);
+                  const x = paddingX + (i * scaleX);
+                  const y = height - paddingY - ((d.equity - yMin) * scaleY);
+                  const isProfit = i === 0 ? true : d.equity >= (chartData[i-1]?.equity || 0);
+                  const isHovered = hoveredPoint?.x === x && hoveredPoint?.y === y;
                   return (
                     <circle 
                       key={i} 
                       cx={x} 
                       cy={y} 
-                      r="4" 
+                      r={isHovered ? "7" : "4"} 
                       fill={isProfit ? "#34d399" : "#fb7185"} 
                       stroke="#0f172a" 
-                      strokeWidth="2" 
-                    >
-                      <title>{d.label}: ${d.equity.toFixed(2)} (PnL: ${d.pnl.toFixed(2)})</title>
-                    </circle>
+                      strokeWidth={isHovered ? "3" : "2"} 
+                      onMouseMove={() => setHoveredPoint({ x, y, label: d.label, equity: d.equity, pnl: d.pnl })}
+                      className="cursor-pointer transition-all duration-150"
+                    />
                   );
                 })}
               </svg>
+
+              {/* Hover Tooltip rendered absolutely over the chart */}
+              {hoveredPoint && (
+                <div 
+                  className="absolute pointer-events-none bg-slate-900 border border-slate-700 shadow-xl rounded-lg p-3 text-xs z-10 transform -translate-x-1/2 -translate-y-full"
+                  style={{ left: `${(hoveredPoint.x / width) * 100}%`, top: `calc(${(hoveredPoint.y / height) * 100}% - 10px)` }}
+                >
+                  <p className="font-bold text-slate-200 mb-1">{hoveredPoint.label}</p>
+                  <div className="font-mono flex justify-between gap-4">
+                    <span className="text-slate-400">Equity:</span>
+                    <span className="text-white">${hoveredPoint.equity.toFixed(2)}</span>
+                  </div>
+                  {hoveredPoint.label !== "Initial Balance" && (
+                    <div className="font-mono flex justify-between gap-4">
+                      <span className="text-slate-400">Profit:</span>
+                      <span className={hoveredPoint.pnl >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                        {hoveredPoint.pnl >= 0 ? "+" : ""}${hoveredPoint.pnl.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
             <div className="absolute top-4 right-4 bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-xs font-mono">
-              <span className="text-slate-400">Total Return: </span>
-              <span className={chartData[chartData.length - 1].equity >= 0 ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
+              <span className="text-slate-400">Current Balance: </span>
+              <span className={chartData[chartData.length - 1].equity >= initialBalance ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
                 ${chartData[chartData.length - 1].equity.toFixed(2)}
               </span>
             </div>
@@ -244,6 +316,21 @@ export default function EquityCurveSimulator({ trades }: EquityCurveSimulatorPro
                   <p className="text-[10px] text-slate-500">{bestSetup.wins}W / {bestSetup.total - bestSetup.wins}L</p>
                 </div>
               </div>
+
+              {/* Trade Session Setup Notes Summary */}
+              {bestSetup.notes.length > 0 && (
+                <div className="mt-4 bg-slate-950/60 border border-slate-800/80 rounded-lg p-4 relative z-10">
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-mono mb-2">Trade Session Setup Notes (Summary)</p>
+                  <ul className="list-disc list-inside space-y-1.5 text-xs text-slate-300">
+                    {bestSetup.notes.slice(0, 5).map((note, idx) => (
+                      <li key={idx} className="line-clamp-2 leading-relaxed opacity-90">{note}</li>
+                    ))}
+                  </ul>
+                  {bestSetup.notes.length > 5 && (
+                    <p className="text-[10px] text-indigo-400 mt-2 font-mono">+ {bestSetup.notes.length - 5} more notes tracked in journal.</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
