@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Trade, Transaction } from '../types';
-import { TrendingUp, BarChart2, Activity, Award, Calendar, Hash } from 'lucide-react';
+import { TrendingUp, TrendingDown, BarChart2, Activity, Award, Calendar, Hash, Lightbulb, AlertTriangle } from 'lucide-react';
 
 interface EquityCurveSimulatorProps {
   trades: Trade[];
@@ -79,10 +79,9 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
   const bestSetup = useMemo(() => {
     if (sortedTrades.length === 0) return null;
 
-    const setups: Record<string, { pnl: number, wins: number, total: number, notes: string[] }> = {};
+    const setups: Record<string, { pnl: number, wins: number, total: number }> = {};
 
     sortedTrades.forEach(t => {
-      // Create a composite key if fields exist, otherwise 'Unknown'
       const type = t.setupType || 'Unknown Setup';
       const sym = t.symbol || 'Unknown Symbol';
       const sess = t.session || 'Unknown Session';
@@ -90,17 +89,13 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
       const key = `${type} | ${sym} | ${sess}`;
       
       if (!setups[key]) {
-        setups[key] = { pnl: 0, wins: 0, total: 0, notes: [] };
+        setups[key] = { pnl: 0, wins: 0, total: 0 };
       }
       
       const pnl = Number(t.profitLoss);
       setups[key].pnl += pnl;
       setups[key].total += 1;
       if (pnl > 0) setups[key].wins += 1;
-      
-      if (t.notes && t.notes.trim()) {
-        setups[key].notes.push(t.notes);
-      }
     });
 
     let best = null;
@@ -120,6 +115,24 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
     return best;
   }, [sortedTrades]);
 
+  // Winning vs Losing Ideas Aggregation
+  const { winningNotes, losingNotes } = useMemo(() => {
+    const wins: string[] = [];
+    const losses: string[] = [];
+    
+    sortedTrades.forEach(t => {
+      if (t.notes && t.notes.trim()) {
+        if (Number(t.profitLoss) > 0) {
+          wins.push(t.notes.trim());
+        } else if (Number(t.profitLoss) < 0) {
+          losses.push(t.notes.trim());
+        }
+      }
+    });
+    
+    return { winningNotes: wins, losingNotes: losses };
+  }, [sortedTrades]);
+
   // SVG Chart Configuration
   const width = 800;
   const height = 350;
@@ -129,7 +142,6 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
   const minEquity = chartData.length > 0 ? Math.min(...chartData.map(d => d.equity)) : 0;
   const maxEquity = chartData.length > 0 ? Math.max(...chartData.map(d => d.equity)) : 100;
   
-  // Add a 10% buffer to min and max so points don't clip at the edges
   const equityBuffer = (maxEquity - minEquity) * 0.1 || 10;
   const yMin = minEquity - equityBuffer;
   const yMax = maxEquity + equityBuffer;
@@ -203,7 +215,6 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
                 
                 {/* X-Axis Date/Trade Labels */}
                 {chartData.map((d, i) => {
-                  // Only draw a label every N points to avoid overcrowding
                   const labelSkip = Math.ceil(chartData.length / 10);
                   if (i % labelSkip !== 0 && i !== chartData.length - 1 && i !== 0) return null;
                   
@@ -316,23 +327,68 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
                   <p className="text-[10px] text-slate-500">{bestSetup.wins}W / {bestSetup.total - bestSetup.wins}L</p>
                 </div>
               </div>
-
-              {/* Trade Session Setup Notes Summary */}
-              {bestSetup.notes.length > 0 && (
-                <div className="mt-4 bg-slate-950/60 border border-slate-800/80 rounded-lg p-4 relative z-10">
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-mono mb-2">Trade Session Setup Notes (Summary)</p>
-                  <ul className="list-disc list-inside space-y-1.5 text-xs text-slate-300">
-                    {bestSetup.notes.slice(0, 5).map((note, idx) => (
-                      <li key={idx} className="line-clamp-2 leading-relaxed opacity-90">{note}</li>
-                    ))}
-                  </ul>
-                  {bestSetup.notes.length > 5 && (
-                    <p className="text-[10px] text-indigo-400 mt-2 font-mono">+ {bestSetup.notes.length - 5} more notes tracked in journal.</p>
-                  )}
-                </div>
-              )}
             </div>
           )}
+
+          {/* Trade Ideas Summary Panels (Winning vs Losing) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* The Edge (Winning Ideas) */}
+            <div className="bg-slate-950/60 border border-emerald-900/40 rounded-xl p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Lightbulb size={16} className="text-emerald-400" />
+                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider font-mono">Your Edge (Best Ideas)</h4>
+              </div>
+              {winningNotes.length > 0 ? (
+                <div className="space-y-3">
+                  <ul className="list-none space-y-2 text-xs text-slate-300">
+                    {winningNotes.slice(0, 5).map((note, idx) => (
+                      <li key={idx} className="flex items-start gap-2 border-b border-slate-800/50 pb-2 last:border-0">
+                        <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
+                        <span className="leading-relaxed opacity-90 line-clamp-3">{note}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {winningNotes.length > 5 && (
+                    <p className="text-[10px] text-emerald-500 font-mono mt-2 text-center bg-emerald-950/30 py-1 rounded">
+                      + {winningNotes.length - 5} more winning ideas tracked.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 italic">No notes logged for winning trades yet.</p>
+              )}
+            </div>
+
+            {/* The Drawbacks (Losing Ideas) */}
+            <div className="bg-slate-950/60 border border-rose-900/40 rounded-xl p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <AlertTriangle size={16} className="text-rose-400" />
+                <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider font-mono">Drawbacks (Losing Ideas)</h4>
+              </div>
+              {losingNotes.length > 0 ? (
+                <div className="space-y-3">
+                  <ul className="list-none space-y-2 text-xs text-slate-300">
+                    {losingNotes.slice(0, 5).map((note, idx) => (
+                      <li key={idx} className="flex items-start gap-2 border-b border-slate-800/50 pb-2 last:border-0">
+                        <span className="text-rose-500 shrink-0 mt-0.5">✗</span>
+                        <span className="leading-relaxed opacity-90 line-clamp-3">{note}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {losingNotes.length > 5 && (
+                    <p className="text-[10px] text-rose-500 font-mono mt-2 text-center bg-rose-950/30 py-1 rounded">
+                      + {losingNotes.length - 5} more losing ideas tracked.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 italic">No notes logged for losing trades yet.</p>
+              )}
+            </div>
+
+          </div>
+
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-slate-500 border border-dashed border-slate-800 rounded-xl bg-slate-950/50">
