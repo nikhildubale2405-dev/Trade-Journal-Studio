@@ -9,7 +9,7 @@ interface EquityCurveSimulatorProps {
 
 export default function EquityCurveSimulator({ trades, transactions }: EquityCurveSimulatorProps) {
   const [viewMode, setViewMode] = useState<"trade" | "day">("trade");
-  const [hoveredPoint, setHoveredPoint] = useState<{x: number, y: number, label: string, equity: number, pnl: number} | null>(null);
+  const [hoveredPoint, setHoveredPoint] = useState<{ x: number, y: number, label: string, equity: number, pnl: number } | null>(null);
 
   // Calculate Initial Funding Balance
   const initialBalance = useMemo(() => {
@@ -33,7 +33,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
   // Data processing for Chart
   const chartData = useMemo(() => {
     let currentEquity = initialBalance;
-    
+
     // Always start the curve at point 0 (Initial Balance)
     const initialPoint = {
       label: "Initial Balance",
@@ -60,7 +60,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
         if (!dailyMap[t.entryDate]) dailyMap[t.entryDate] = 0;
         dailyMap[t.entryDate] += Number(t.profitLoss);
       });
-      
+
       const sortedDays = Object.keys(dailyMap).sort();
       const points = sortedDays.map(date => {
         currentEquity += dailyMap[date];
@@ -85,13 +85,13 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
       const type = t.setupType || 'Unknown Setup';
       const sym = t.symbol || 'Unknown Symbol';
       const sess = t.session || 'Unknown Session';
-      
+
       const key = `${type} | ${sym} | ${sess}`;
-      
+
       if (!setups[key]) {
         setups[key] = { pnl: 0, wins: 0, total: 0 };
       }
-      
+
       const pnl = Number(t.profitLoss);
       setups[key].pnl += pnl;
       setups[key].total += 1;
@@ -119,7 +119,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
   const { winningNotes, edgeSummary } = useMemo(() => {
     const wins: string[] = [];
     const winningTrades = sortedTrades.filter(t => Number(t.profitLoss) > 0);
-    
+
     sortedTrades.forEach(t => {
       if (t.notes && t.notes.trim() && Number(t.profitLoss) > 0) {
         wins.push(t.notes.trim());
@@ -129,7 +129,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
     let edgeStats = null;
     if (winningTrades.length > 0) {
       const totalProfit = winningTrades.reduce((sum, t) => sum + Number(t.profitLoss), 0);
-      
+
       const countFreq = (arr: (string | undefined)[]) => {
         const map: Record<string, number> = {};
         arr.forEach(a => {
@@ -147,7 +147,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
         topSetup: countFreq(winningTrades.map(w => w.setupType))
       };
     }
-    
+
     return { winningNotes: wins, edgeSummary: edgeStats };
   }, [sortedTrades]);
 
@@ -159,14 +159,14 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
 
   const minEquity = chartData.length > 0 ? Math.min(...chartData.map(d => d.equity)) : 0;
   const maxEquity = chartData.length > 0 ? Math.max(...chartData.map(d => d.equity)) : 100;
-  
+
   const equityBuffer = (maxEquity - minEquity) * 0.1 || 10;
   const yMin = minEquity - equityBuffer;
   const yMax = maxEquity + equityBuffer;
-  
+
   const rangeY = (yMax - yMin) || 100;
   const scaleY = (height - 2 * paddingY) / rangeY;
-  
+
   const rangeX = Math.max(chartData.length - 1, 1);
   const scaleX = (width - 2 * paddingX) / rangeX;
 
@@ -191,7 +191,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
           </h3>
           <p className="text-[10px] text-slate-500">Analyze your account growth trajectory and discover your most profitable setups.</p>
         </div>
-        
+
         <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-1">
           <button
             onClick={() => setViewMode("trade")}
@@ -215,7 +215,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
           {/* Equity Chart Panel */}
           <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 relative overflow-x-auto">
             <div className="min-w-[600px] relative" onMouseLeave={() => setHoveredPoint(null)}>
-              
+
               <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
                 {/* Horizontal Grid Lines and Y-Axis Labels */}
                 {[0, 0.25, 0.5, 0.75, 1].map(tick => {
@@ -230,12 +230,12 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
                     </g>
                   );
                 })}
-                
+
                 {/* X-Axis Date/Trade Labels */}
                 {chartData.map((d, i) => {
                   const labelSkip = Math.ceil(chartData.length / 10);
                   if (i % labelSkip !== 0 && i !== chartData.length - 1 && i !== 0) return null;
-                  
+
                   const x = paddingX + (i * scaleX);
                   const y = height - paddingY + 20;
                   return (
@@ -257,7 +257,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
                 <polyline
                   points={getPoints()}
                   fill="none"
-                  stroke="#818cf8"
+                  stroke="#9b9ca1ff"
                   strokeWidth="3"
                   strokeLinejoin="round"
                   strokeLinecap="round"
@@ -267,17 +267,17 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
                 {chartData.map((d, i) => {
                   const x = paddingX + (i * scaleX);
                   const y = height - paddingY - ((d.equity - yMin) * scaleY);
-                  const isProfit = i === 0 ? true : d.equity >= (chartData[i-1]?.equity || 0);
+                  const isProfit = i === 0 ? true : d.equity >= (chartData[i - 1]?.equity || 0);
                   const isHovered = hoveredPoint?.x === x && hoveredPoint?.y === y;
                   return (
-                    <circle 
-                      key={i} 
-                      cx={x} 
-                      cy={y} 
-                      r={isHovered ? "7" : "4"} 
-                      fill={isProfit ? "#34d399" : "#fb7185"} 
-                      stroke="#0f172a" 
-                      strokeWidth={isHovered ? "3" : "2"} 
+                    <circle
+                      key={i}
+                      cx={x}
+                      cy={y}
+                      r={isHovered ? "7" : "4"}
+                      fill={isProfit ? "#34d399" : "#fb7185"}
+                      stroke="#0f172a"
+                      strokeWidth={isHovered ? "3" : "2"}
                       onMouseMove={() => setHoveredPoint({ x, y, label: d.label, equity: d.equity, pnl: d.pnl })}
                       className="cursor-pointer transition-all duration-150"
                     />
@@ -287,7 +287,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
 
               {/* Hover Tooltip rendered absolutely over the chart */}
               {hoveredPoint && (
-                <div 
+                <div
                   className="absolute pointer-events-none bg-slate-900 border border-slate-700 shadow-xl rounded-lg p-3 text-xs z-10 transform -translate-x-1/2 -translate-y-full"
                   style={{ left: `${(hoveredPoint.x / width) * 100}%`, top: `calc(${(hoveredPoint.y / height) * 100}% - 10px)` }}
                 >
@@ -328,7 +328,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
                 </div>
                 <h4 className="text-sm font-bold text-indigo-300 uppercase tracking-wider font-mono">Top Performing Setup</h4>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 relative z-10">
                 <div className="bg-slate-950/50 border border-slate-800 rounded-lg p-3">
                   <p className="text-[10px] text-slate-400 uppercase tracking-widest font-mono mb-1">Configuration</p>
@@ -354,7 +354,7 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
               <Lightbulb size={20} className="text-emerald-400" />
               <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider font-mono">Your Edge (Best Ideas & Summary)</h4>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Statistical Edge Summary */}
               <div>
