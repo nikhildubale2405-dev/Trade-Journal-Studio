@@ -170,26 +170,27 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
   const rangeX = Math.max(chartData.length - 1, 1);
   const scaleX = (width - 2 * paddingX) / rangeX;
 
-  const getSmoothPath = () => {
+  // Straight line path like a trading chart (TradingView style)
+  const getLinePath = () => {
     if (chartData.length === 0) return "";
-    
-    const firstX = paddingX;
-    const firstY = height - paddingY - ((chartData[0].equity - yMin) * scaleY);
-    let path = `M ${firstX},${firstY}`;
-
-    for (let i = 1; i < chartData.length; i++) {
-      const prevX = paddingX + ((i - 1) * scaleX);
-      const prevY = height - paddingY - ((chartData[i-1].equity - yMin) * scaleY);
-      
+    return chartData.map((d, i) => {
       const x = paddingX + (i * scaleX);
-      const y = height - paddingY - ((chartData[i].equity - yMin) * scaleY);
+      const y = height - paddingY - ((d.equity - yMin) * scaleY);
+      return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
+    }).join(" ");
+  };
 
-      // Create a smooth cubic bezier curve
-      const cpX = (prevX + x) / 2;
-      path += ` C ${cpX},${prevY} ${cpX},${y} ${x},${y}`;
-    }
-    
-    return path;
+  // Filled area path beneath the line (for gradient fill)
+  const getAreaPath = () => {
+    if (chartData.length === 0) return "";
+    const linePath = chartData.map((d, i) => {
+      const x = paddingX + (i * scaleX);
+      const y = height - paddingY - ((d.equity - yMin) * scaleY);
+      return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
+    }).join(" ");
+    const lastX = paddingX + ((chartData.length - 1) * scaleX);
+    const bottomY = height - paddingY;
+    return `${linePath} L ${lastX},${bottomY} L ${paddingX},${bottomY} Z`;
   };
 
   const zeroY = height - paddingY - ((0 - yMin) * scaleY);
@@ -266,12 +267,26 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
                   <line x1={paddingX} y1={zeroY} x2={width - paddingX} y2={zeroY} stroke="#cbd5e1" strokeWidth="1.5" opacity="0.3" />
                 )}
 
-                {/* The Smooth Line connecting the dots */}
+                {/* Gradient definition for area fill */}
+                <defs>
+                  <linearGradient id="equityAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={chartData[chartData.length - 1].equity >= initialBalance ? "#34d399" : "#fb7185"} stopOpacity="0.25" />
+                    <stop offset="100%" stopColor={chartData[chartData.length - 1].equity >= initialBalance ? "#34d399" : "#fb7185"} stopOpacity="0.02" />
+                  </linearGradient>
+                </defs>
+
+                {/* Filled area beneath the line */}
                 <path
-                  d={getSmoothPath()}
+                  d={getAreaPath()}
+                  fill="url(#equityAreaGradient)"
+                />
+
+                {/* The trading chart line */}
+                <path
+                  d={getLinePath()}
                   fill="none"
-                  stroke="#9b9ca1ff"
-                  strokeWidth="3"
+                  stroke={chartData[chartData.length - 1].equity >= initialBalance ? "#34d399" : "#fb7185"}
+                  strokeWidth="2"
                   strokeLinejoin="round"
                   strokeLinecap="round"
                 />
