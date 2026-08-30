@@ -115,22 +115,40 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
     return best;
   }, [sortedTrades]);
 
-  // Winning vs Losing Ideas Aggregation
-  const { winningNotes, losingNotes } = useMemo(() => {
+  // Winning Edge Aggregation & Summary
+  const { winningNotes, edgeSummary } = useMemo(() => {
     const wins: string[] = [];
-    const losses: string[] = [];
+    const winningTrades = sortedTrades.filter(t => Number(t.profitLoss) > 0);
     
     sortedTrades.forEach(t => {
-      if (t.notes && t.notes.trim()) {
-        if (Number(t.profitLoss) > 0) {
-          wins.push(t.notes.trim());
-        } else if (Number(t.profitLoss) < 0) {
-          losses.push(t.notes.trim());
-        }
+      if (t.notes && t.notes.trim() && Number(t.profitLoss) > 0) {
+        wins.push(t.notes.trim());
       }
     });
+
+    let edgeStats = null;
+    if (winningTrades.length > 0) {
+      const totalProfit = winningTrades.reduce((sum, t) => sum + Number(t.profitLoss), 0);
+      
+      const countFreq = (arr: (string | undefined)[]) => {
+        const map: Record<string, number> = {};
+        arr.forEach(a => {
+          if (a && a !== 'Unknown') map[a] = (map[a] || 0) + 1;
+        });
+        const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+        return sorted.length > 0 ? sorted[0][0] : 'N/A';
+      };
+
+      edgeStats = {
+        totalWins: winningTrades.length,
+        avgWin: totalProfit / winningTrades.length,
+        topSymbol: countFreq(winningTrades.map(w => w.symbol)),
+        topSession: countFreq(winningTrades.map(w => w.session)),
+        topSetup: countFreq(winningTrades.map(w => w.setupType))
+      };
+    }
     
-    return { winningNotes: wins, losingNotes: losses };
+    return { winningNotes: wins, edgeSummary: edgeStats };
   }, [sortedTrades]);
 
   // SVG Chart Configuration
@@ -330,63 +348,69 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
             </div>
           )}
 
-          {/* Trade Ideas Summary Panels (Winning vs Losing) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* The Edge (Winning Ideas) - Expanded Full Width */}
+          <div className="bg-slate-950/60 border border-emerald-900/40 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-6 border-b border-emerald-900/30 pb-3">
+              <Lightbulb size={20} className="text-emerald-400" />
+              <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-wider font-mono">Your Edge (Best Ideas & Summary)</h4>
+            </div>
             
-            {/* The Edge (Winning Ideas) */}
-            <div className="bg-slate-950/60 border border-emerald-900/40 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <Lightbulb size={16} className="text-emerald-400" />
-                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider font-mono">Your Edge (Best Ideas)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Statistical Edge Summary */}
+              <div>
+                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono mb-3">Edge Profile Summary</h5>
+                {edgeSummary ? (
+                  <div className="space-y-4 bg-slate-900 border border-slate-800 rounded-lg p-4">
+                    <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                      <span className="text-xs text-slate-400 font-mono">Win Count</span>
+                      <span className="text-sm font-bold text-emerald-400">{edgeSummary.totalWins} Trades</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                      <span className="text-xs text-slate-400 font-mono">Average Win</span>
+                      <span className="text-sm font-bold text-emerald-400">${edgeSummary.avgWin.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                      <span className="text-xs text-slate-400 font-mono">Dominant Setup</span>
+                      <span className="text-xs font-bold text-slate-200">{edgeSummary.topSetup}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                      <span className="text-xs text-slate-400 font-mono">Best Asset</span>
+                      <span className="text-xs font-bold text-slate-200">{edgeSummary.topSymbol}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-slate-400 font-mono">Optimal Time</span>
+                      <span className="text-xs font-bold text-slate-200">{edgeSummary.topSession}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 italic">No winning trades logged to generate an edge profile.</p>
+                )}
               </div>
-              {winningNotes.length > 0 ? (
-                <div className="space-y-3">
-                  <ul className="list-none space-y-2 text-xs text-slate-300">
-                    {winningNotes.slice(0, 5).map((note, idx) => (
-                      <li key={idx} className="flex items-start gap-2 border-b border-slate-800/50 pb-2 last:border-0">
-                        <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
-                        <span className="leading-relaxed opacity-90 line-clamp-3">{note}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {winningNotes.length > 5 && (
-                    <p className="text-[10px] text-emerald-500 font-mono mt-2 text-center bg-emerald-950/30 py-1 rounded">
-                      + {winningNotes.length - 5} more winning ideas tracked.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-500 italic">No notes logged for winning trades yet.</p>
-              )}
-            </div>
 
-            {/* The Drawbacks (Losing Ideas) */}
-            <div className="bg-slate-950/60 border border-rose-900/40 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle size={16} className="text-rose-400" />
-                <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider font-mono">Drawbacks (Losing Ideas)</h4>
+              {/* Edge Notes */}
+              <div>
+                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono mb-3">Tracked Edge Notes</h5>
+                {winningNotes.length > 0 ? (
+                  <div className="space-y-3">
+                    <ul className="list-none space-y-3 text-xs text-slate-300">
+                      {winningNotes.slice(0, 5).map((note, idx) => (
+                        <li key={idx} className="flex items-start gap-3 bg-emerald-950/10 border border-emerald-900/20 p-2.5 rounded-lg">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
+                          <span className="leading-relaxed opacity-90 line-clamp-3">{note}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {winningNotes.length > 5 && (
+                      <p className="text-[10px] text-emerald-500 font-mono mt-2 text-center bg-emerald-950/30 py-1.5 rounded">
+                        + {winningNotes.length - 5} more winning ideas tracked.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 italic">No notes logged for winning trades yet.</p>
+                )}
               </div>
-              {losingNotes.length > 0 ? (
-                <div className="space-y-3">
-                  <ul className="list-none space-y-2 text-xs text-slate-300">
-                    {losingNotes.slice(0, 5).map((note, idx) => (
-                      <li key={idx} className="flex items-start gap-2 border-b border-slate-800/50 pb-2 last:border-0">
-                        <span className="text-rose-500 shrink-0 mt-0.5">✗</span>
-                        <span className="leading-relaxed opacity-90 line-clamp-3">{note}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {losingNotes.length > 5 && (
-                    <p className="text-[10px] text-rose-500 font-mono mt-2 text-center bg-rose-950/30 py-1 rounded">
-                      + {losingNotes.length - 5} more losing ideas tracked.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-500 italic">No notes logged for losing trades yet.</p>
-              )}
             </div>
-
           </div>
 
         </div>
