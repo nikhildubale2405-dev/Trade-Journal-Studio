@@ -267,25 +267,11 @@ export default function EquityCurveSimulator({ trades, transactions }: EquityCur
                   <line x1={paddingX} y1={zeroY} x2={width - paddingX} y2={zeroY} stroke="#cbd5e1" strokeWidth="1.5" opacity="0.3" />
                 )}
 
-                {/* Gradient definition for area fill */}
-                <defs>
-                  <linearGradient id="equityAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={chartData[chartData.length - 1].equity >= initialBalance ? "#34d399" : "#fb7185"} stopOpacity="0.25" />
-                    <stop offset="100%" stopColor={chartData[chartData.length - 1].equity >= initialBalance ? "#34d399" : "#fb7185"} stopOpacity="0.02" />
-                  </linearGradient>
-                </defs>
-
-                {/* Filled area beneath the line */}
-                <path
-                  d={getAreaPath()}
-                  fill="url(#equityAreaGradient)"
-                />
-
                 {/* The trading chart line */}
                 <path
                   d={getLinePath()}
                   fill="none"
-                  stroke={chartData[chartData.length - 1].equity >= initialBalance ? "#34d399" : "#fb7185"}
+                  stroke="#94a3b8"
                   strokeWidth="2"
                   strokeLinejoin="round"
                   strokeLinecap="round"
